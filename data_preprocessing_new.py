@@ -22,7 +22,7 @@ current_time = datetime.datetime.now(pytz.timezone(time_zone))
 print('starting time: ' + str(current_time))
 current_time_string = current_time.strftime("%Y%m%d-%H%M%S")
 
-tweets_clean_file = tweets_clean_file_path + '/tweets_' + current_time_string + '.csv'
+tweets_clean_file = tweets_clean_file_path + '/tweets_' + current_time_string
 
 
 spark = SparkSession \
@@ -30,7 +30,8 @@ spark = SparkSession \
     .appName("data cleaning and sentiment analysis") \
     .getOrCreate()
 
-pandasDF = pd.read_csv("tweets_files/tweets_20211025-000001.csv", index_col=None, header=0, usecols= ['Datetime', 'Tweet Id', 'Text', 'Username' ])
+#small size file for testing
+pandasDF = pd.read_csv(tweets_raw_file_path, index_col=None, header=0, usecols= ['Datetime', 'Tweet Id', 'Text', 'Username' ])
 df=spark.createDataFrame(pandasDF) 
 df.printSchema()
 
@@ -49,7 +50,7 @@ if (method == 'textblob'):
     df = df.select('Datetime','Clean_Text', 'Text', 'Subjectivity','Polarity', sentiment_func('Polarity').alias('Sentiment'))
     print(df.show(10))
 
-    df.write.csv(tweets_clean_file)
+    df.repartition(1).write.csv(tweets_clean_file)
 
 current_time = datetime.datetime.now(pytz.timezone(time_zone))
 print('ending time: ' + str(current_time))
